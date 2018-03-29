@@ -1,8 +1,10 @@
-#OBJECTIVE
+# OBJECTIVE
+
 Create a spring boot web application that exposes a RESTful CRUD endpoint for an IP-Hostname loookup table of a PostgreSQL database. 
 After each service invocation, the application runs a python script that dumps the database contents on a CSV file.
 
-#TOOLING
+# TOOLING
+
 Ended up with the following software stack on a 16.04 Ubuntu:
 1. PostgreSQL 9.5
 2. Java 8 (Spring Boot with JPA
@@ -10,25 +12,30 @@ Ended up with the following software stack on a 16.04 Ubuntu:
 4. Maven 3.3
 5. Python 3.5 (with pip and virtualenv installed)
 
-#DATABASE SETUP
+# DATABASE SETUP
+
 Install PostgreSQL and create a user and a database. Connect to the database to make sure everything looks OK.
 
-#PYTHON
+# PYTHON
+
 Create a python environment that includes the PostreSQL adapter
 
 	virtualenv --python=/usr/bin/python3 venvs/postgrestest
 	source ~/venvs/postgrestest/bin/activate
 	pip install psycopg2-binary
 
-#SPRING BOOT APPLICATION CONFIGURATION
-Open application.properties. Fill the properties mentioned below as appropriate for your database. 
+# SPRING BOOT APPLICATION CONFIGURATION
 
-	springboot.db.host=
-	springboot.db.name=
+Open application.properties. Fill the properties mentioned below as appropriate for your setup. 
+
+	custom.db.host=
+	custom.db.name=
+	custom.fs.csvpath=/tmp
 	spring.datasource.username=
 	spring.datasource.password=
 
-#APACHE TOMCAT SETUP
+# APACHE TOMCAT SETUP
+
  If you like to redeploy using maven you have to do sone users and roles configuration. My tomcat-users.xml looks like
  
 	<role rolename="manager"/>
@@ -42,7 +49,8 @@ Important: On the shell that starts Tomcat, we need to have active the virtualen
 
 	source ~/venvs/postgrestest/bin/activate
 
-#MAVEN
+# MAVEN
+
 Starter mvn project with the required spring boot modules (WEB, REST, JPA). Modified with a couple extra dependencies and the tomcat7-maven-plugin.
 
 	mvn clean tomcat7:deploy|redeploy|undeploy
@@ -55,26 +63,29 @@ The REST api is on
 	
 	http://localhost:8080/bt/rs/dnsrecord
 
-#OBSERVATIONS
+# OBSERVATIONS
 
-##The bad
+## The bad
+
 1. Not sure if REST errors (e.g. GET on non existing record) are handled perfectly.
 2. Bean validation works, but the underlying error is not propagated properly, a generic HTTP 500 is returned instead.
 3. No logging infrastructure.
 
-##The good
+## The good
+
 1. Minimal codebase size.
 2. Used some Java8 features and APIs.
 3. Configuration not externalized, but in one place and externalizing the crucial parts is trivial. Demo seems smoother like this. 
 3. Python script bundled with the application and does not contain duplicate configuration (db details).
 4. Custom validations for IPv4 addresses and host names that delegate to apache commons.
 
-#DEMO
+# DEMO
+
 We will use `curl` to demonstrate the REST API. 
 
-##Create
+## Create
 
-###Happy schenario
+### Happy schenario
 	$ curl -i -X POST -H "Content-Type:application/json" http://localhost:8080/bt/rs/dnsrecord/ -d '{"ipAddress":"147.102.3.1","hostName":"springboot.cslab.ece.ntua.gr"}'
 
 	HTTP/1.1 200 
@@ -93,7 +104,8 @@ We will use `curl` to demonstrate the REST API.
 	  5 | danaos.cslab.ece.ntua.gr | 147.102.3.1
 	(1 row)
 
-###Invalid IP
+### Invalid IP
+
 	$ curl -i -X POST -H "Content-Type:application/json" http://localhost:8080/bt/rs/dnsrecord/ -d '{"ipAddress":"10.0.0.256","hostName":"whatever"}'
 	
 	HTTP/1.1 500 
@@ -103,7 +115,8 @@ We will use `curl` to demonstrate the REST API.
 
 ##Read
 
-###Existing
+### Existing
+
 	curl http://localhost:8080/bt/rs/dnsrecord/5
 	{"id":5,"ipAddress":"147.102.3.1","hostName":"danaos.cslab.ece.ntua.gr"}
 	
@@ -111,7 +124,8 @@ We will use `curl` to demonstrate the REST API.
 	sout-2: wrote 1 row to /tmp/dump-2.csv
 	script execution with id 2 exited with rc=0
 	
-###Non existing
+### Non existing
+
 	curl http://localhost:8080/bt/rs/dnsrecord/999
 	Non existing record with id 999
 	
@@ -119,7 +133,8 @@ We will use `curl` to demonstrate the REST API.
 	sout-3: wrote 1 row to /tmp/dump-3.csv
 	script execution with id 3 exited with rc=0
 	
-##Update
+## Update
+
 First add one more...
 
 	$ curl -i -X POST -H "Content-Type:application/json" http://localhost:8080/bt/rs/dnsrecord/ -d '{"ipAddress":"10.0.0.1","hostName":"localgw"}'
@@ -165,7 +180,7 @@ Now update it...
 
 Updating non existing records returns an error like above
 
-##Delete
+## Delete
 
 	$ curl -i -X DELETE http://localhost:8080/bt/rs/dnsrecord/7
 	HTTP/1.1 204
