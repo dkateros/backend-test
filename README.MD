@@ -30,7 +30,7 @@ Open application.properties. Fill the properties mentioned below as appropriate 
 
 	custom.db.host=
 	custom.db.name=
-	custom.fs.csvpath=/tmp
+	custom.fs.csvpath=
 	spring.datasource.username=
 	spring.datasource.password=
 
@@ -113,7 +113,7 @@ We will use `curl` to demonstrate the REST API.
 	...
 	{"timestamp":"2018-03-29T20:54:01.698+0000","status":500,"error":"Internal Server Error","message":"Could not commit JPA transaction; nested exception is javax.persistence.RollbackException: Error while committing the transaction","path":"/bt/rs/dnsrecord/"}
 
-##Read
+## Read
 
 ### Existing
 
